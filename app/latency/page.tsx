@@ -595,6 +595,7 @@ export default function Home() {
                     boxOpacity > 0.5 ? "var(--background)" : "var(--active)",
                 }}
               ></div>
+
               <div className="relative z-2 w-9.5 h-9.5">
                 <div
                   className="shape-1 p-1.25 origin-[25%_25%]"
