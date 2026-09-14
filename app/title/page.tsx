@@ -9,7 +9,12 @@ const SHAPE_SIZE = 38;
 const KNOB_SIZE = 28;
 const ONESHOT_INITIAL_FREEZE_MS = 350;
 const STATE5_SEGMENT_DURATION_MS = 250;
-const STATE5_ACTIVE_COLORS = ["#FF9748", "#FFC61A", "#B5F349", "#2EDCE0"];
+const DEFAULT_STATE5_ACTIVE_COLORS = [
+  "#FF9748",
+  "#FFC61A",
+  "#B5F349",
+  "#2EDCE0",
+];
 const DEFAULT_ACTIVE_COLOR = "#ffffff";
 const STATE1_LOOPED_ROTATE_DEG = -360;
 const STATE1_ONESHOT_PHASE_1_DURATION_MS = 620;
@@ -487,6 +492,10 @@ export default function Title() {
   const [speedFactor, setSpeedFactor] = useState(1.3);
   const [roundedCorners, setRoundedCorners] = useState(1);
   const [boxOpacity, setBoxOpacity] = useState(0.51);
+  const [isColorMode, setIsColorMode] = useState(true);
+  const [state5Colors, setState5Colors] = useState<string[]>(
+    DEFAULT_STATE5_ACTIVE_COLORS,
+  );
 
   const resetActiveColor = () => {
     document.documentElement.style.setProperty(
@@ -566,8 +575,11 @@ export default function Title() {
         );
       } else if (nextState === 2) {
         const segmentIndex = getState5SegmentIndex(localMs);
-        const activeColor =
-          STATE5_ACTIVE_COLORS[segmentIndex] ?? STATE5_ACTIVE_COLORS[0];
+        const activeColor = isColorMode
+          ? (state5Colors[segmentIndex] ??
+            state5Colors[0] ??
+            DEFAULT_ACTIVE_COLOR)
+          : DEFAULT_ACTIVE_COLOR;
         document.documentElement.style.setProperty("--active", activeColor);
       }
 
@@ -711,7 +723,15 @@ export default function Title() {
       root.classList.remove(`state-${currentState}`);
       cancelAnimationFrame(frameId);
     };
-  }, [sequenceOrder, speedFactor, isLooped, isPlaying, seekVersion]);
+  }, [
+    sequenceOrder,
+    speedFactor,
+    isLooped,
+    isPlaying,
+    seekVersion,
+    isColorMode,
+    state5Colors,
+  ]);
 
   return (
     <main className="min-h-screen w-full">
@@ -1082,6 +1102,47 @@ export default function Title() {
                 value={roundedCorners}
                 onChange={(e) => setRoundedCorners(parseFloat(e.target.value))}
               />
+            </div>
+            <div
+              className="grid items-start gap-1 duration-200 ease-in-out overflow-hidden"
+              style={{
+                gridTemplateRows: isColorMode ? "auto 1fr" : "auto 0fr",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <label htmlFor="colorMode">Show colors:</label>
+                <input
+                  id="colorMode"
+                  type="checkbox"
+                  checked={isColorMode}
+                  onChange={(e) => {
+                    setIsColorMode(e.target.checked);
+                    setSeekVersion((version) => version + 1);
+                  }}
+                />
+              </div>
+              <div className="w-full flex flex-col gap-1 overflow-hidden">
+                <div className="w-full mb-2 flex items-center gap-1">
+                  {state5Colors.map((color, index) => (
+                    <div
+                      className="w-full h-6 flex items-center justify-center rounded-md overflow-hidden"
+                      key={index}
+                    >
+                      <input
+                        className="min-w-[calc(100%+16px)] min-h-10 cursor-pointer"
+                        type="color"
+                        value={color}
+                        onChange={(e) => {
+                          const nextColors = [...state5Colors];
+                          nextColors[index] = e.target.value;
+                          setState5Colors(nextColors);
+                          setSeekVersion((version) => version + 1);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
