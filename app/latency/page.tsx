@@ -25,6 +25,7 @@ import {
   Urbanist,
   Work_Sans,
 } from "next/font/google";
+import Nav from "../components/Nav";
 
 let STATE_DURATION_MS = 1050;
 let SPEED_FACTOR = 1;
@@ -670,9 +671,10 @@ export default function Home() {
           </h1>
         </div>
         <div
-          className="border-l border-l-white/10 duration-200 ease-in-out overflow-hidden"
+          className="relative border-l border-l-white/10 duration-200 ease-in-out overflow-hidden"
           style={{ width: isMenuOpen ? "240px" : "0" }}
         >
+          <Nav />
           <div className="min-w-60 h-full px-4 flex flex-col items-stretch justify-center gap-4">
             <div className="flex flex-col items-stretch gap-1">
               <div className="flex items-center justify-between">

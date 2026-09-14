@@ -42,13 +42,21 @@ h1 {
 .box,
 .test,
 .knob-1,
-.knob-2,
-.knob-3,
-.knob-4 {
+.shape-1,
+.shape-2,
+.shape-3,
+.shape-4 {
   will-change: background-color;
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.wordmark path {
+  will-change: fill, stroke;
+  transition:
+    fill 0.15s ease,
+    stroke 0.15s ease;
 }
 
 .shape-1 {
