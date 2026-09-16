@@ -91,6 +91,17 @@ export default function PromptPage() {
     setIsClickLocked(next);
   };
 
+  const focusInput = () => {
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+
+    input.focus();
+    const cursor = input.value.length;
+    input.setSelectionRange(cursor, cursor);
+  };
+
   const resetHoverVisuals = () => {
     if (starsRef.current) {
       const stars = Array.from(starsRef.current.querySelectorAll("path"));
@@ -198,6 +209,22 @@ export default function PromptPage() {
     animateBubbleClose();
   };
 
+  const handleBubbleSurfaceMouseDownCapture = (
+    event: MouseEvent<HTMLDivElement>,
+  ) => {
+    if (!isClickLockedRef.current) {
+      return;
+    }
+
+    if (event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    // Prevent mousedown default focus behavior from blurring the textarea.
+    event.preventDefault();
+    focusInput();
+  };
+
   const animateBubble = (_event: MouseEvent<HTMLDivElement>) => {
     const morphPath = morphPathRef.current;
     const button = buttonRef.current;
@@ -223,7 +250,7 @@ export default function PromptPage() {
 
     morphPath.setAttribute("d", phases[0]);
     button.style.transform = "translate(0px, 0px)";
-    input.focus();
+    focusInput();
 
     const tickMorph = (now: number) => {
       const elapsedMs = now - morphStartTime;
@@ -443,7 +470,11 @@ export default function PromptPage() {
           style={{ transform: `scale(${displayScale})` }}
           onMouseDown={handleBackgroundPointerDown}
         >
-          <div className="relative w-12 h-12" ref={bubbleSurfaceRef}>
+          <div
+            className="relative w-12 h-12"
+            ref={bubbleSurfaceRef}
+            onMouseDownCapture={handleBubbleSurfaceMouseDownCapture}
+          >
             <div
               className="absolute top-0 right-0 w-full h-full flex items-center justify-center duration-600 ease-in-out"
               style={{
@@ -559,7 +590,7 @@ export default function PromptPage() {
                 </svg>
               </div>
               <div
-                className="absolute left-11 top-2.5 w-79 flex items-start justify-start duration-200 ease-[cubic-bezier(0.4,0,0.6,1)] pointer-events-none"
+                className="absolute left-11 top-2.75 w-79 flex items-start justify-start duration-200 ease-[cubic-bezier(0.4,0,0.6,1)] pointer-events-none"
                 style={{
                   transform: `translateX(${isTextAnimated ? "-30px" : "0"})`,
                 }}
