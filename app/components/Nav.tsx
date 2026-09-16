@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 const pages = [
   { href: "/latency", label: "Latency" },
   { href: "/title", label: "Title" },
+  { href: "/prompt", label: "Prompt" },
 ];
 
 export default function Nav() {
@@ -21,7 +22,7 @@ export default function Nav() {
   }, []);
 
   return (
-    <nav className="absolute top-0 left-0 w-full p-4 flex gap-1 flex-wrap">
+    <nav className="absolute top-0 left-0 right-6 p-4 flex gap-1 flex-wrap">
       {pages.map((page) => (
         <a
           key={page.href}
