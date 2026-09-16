@@ -485,8 +485,10 @@ export default function PromptPage() {
               }}
             >
               <div
-                className="w-9 h-9 flex items-center justify-center rounded-full duration-100 cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer"
                 style={{
+                  transition: `opacity 100ms, transform 60ms ease`,
+                  transform: `translate(0, ${shapeExtraHeight}px)`,
                   backgroundColor: isColorMode ? buttonColor : primaryColor,
                   border: `${borderWidth}px solid ${isColorMode ? borderColor : "rgba(255, 255, 255, 0.15)"}`,
                   opacity: isTextAnimated ? 1 : 0,
