@@ -436,6 +436,7 @@ export default function SubmittingPage() {
                 style={{
                   backgroundColor: buttonColor,
                   transform: "scale(0.4)",
+                  transitionDelay: isShapeExpanded ? `200ms` : "0ms",
                 }}
               ></div>
             </div>
