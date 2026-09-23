@@ -460,7 +460,7 @@ export default function Loader({
       >
         <path
           d="M1.97998 5.02L4.22 7L7.96998 3"
-          stroke={invertIcon ? bgColor : buttonColor}
+          stroke={invertIcon ? stateColors[0] : bgColor}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -474,7 +474,7 @@ export default function Loader({
 
         <path
           d="M5 8V7.99M5 5.02V2"
-          stroke={invertIcon ? bgColor : buttonColor}
+          stroke={invertIcon ? stateColors[1] : bgColor}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
