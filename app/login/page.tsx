@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { act, useEffect, useLayoutEffect, useRef, useState } from "react";
 import LatencyLogo from "./LatencyLogo";
 
 export default function LoginPage() {
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [whichHovered, setWhichHovered] = useState("");
   const [lastHovered, setLastHovered] = useState<"twitter" | "slack">("slack");
   const isIndicatorLoaded = isLoaded && !isResent;
+  const [activeColor, setActiveColor] = useState("#FF9748");
 
   function handleSend() {
     const input = emailInputRef.current;
@@ -93,8 +94,8 @@ export default function LoginPage() {
         },
       ],
       {
-        duration: 600,
-        easing: "cubic-bezier(0, 0, 0.2, 1)",
+        duration: 800,
+        easing: "cubic-bezier(.36,.53,.73,1)",
         fill: "forwards",
       },
     );
@@ -109,83 +110,129 @@ export default function LoginPage() {
           <LatencyLogo
             size={40}
             isAnimating={isSent && (!isLoaded || isResent)}
+            onActiveColorChange={setActiveColor}
           />
           <div
-            className="relative w-full px-12 pt-10 pb-12 flex flex-col items-stretch gap-10 bg-[var(--neutral-850)] rounded-[40px] duration-200 ease-in-out"
+            className="relative w-full duration-400 ease-[cubic-bezier(0.8,0,0.2,1)]"
             style={{ height: isSent ? "210px" : "319px" }}
           >
-            <h2
-              className={`${isSent ? (isLoaded ? "opacity-100" : "opacity-0 pointer-events-none") : "opacity-100"} font-macan text-2xl font-medium leading-[100%] tracking-[-0.02em] text-white text-center duration-100`}
-            >
-              {isLoaded ? "Check your email" : "Welcome, let’s get started."}
-            </h2>
-            <p
-              className={`absolute inset-[80px_16px_auto_16px] ${isLoaded ? "opacity-100" : "opacity-0 pointer-events-none"} font-macan text-sm leading-[120%] tracking-[0.01em] text-[var(--neutral-400)] text-center text-pretty duration-200`}
-            >
-              A magic link has been sent to{" "}
-              <span className="text-[var(--neutral-200)]">{email}</span> <br />
-              Please check spam too!
-            </p>
-            <div className="w-full flex flex-col items-center gap-6">
-              <button
-                className={`w-full h-12 ${isSent ? "opacity-0 pointer-events-none duration-100" : "opacity-100 hover:opacity-80! cursor-pointer duration-200"} flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-100)] text-[var(--neutral-900)]`}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 18 18"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M9 0C4.0275 0 0 4.0275 0 9C0 12.9825 2.57625 16.3462 6.15375 17.5387C6.60375 17.6175 6.7725 17.3475 6.7725 17.1112C6.7725 16.8975 6.76125 16.1887 6.76125 15.435C4.5 15.8512 3.915 14.8837 3.735 14.3775C3.63375 14.1187 3.195 13.32 2.8125 13.1062C2.4975 12.9375 2.0475 12.5212 2.80125 12.51C3.51 12.4987 4.01625 13.1625 4.185 13.4325C4.995 14.7937 6.28875 14.4112 6.80625 14.175C6.885 13.59 7.12125 13.1962 7.38 12.9712C5.3775 12.7462 3.285 11.97 3.285 8.5275C3.285 7.54875 3.63375 6.73875 4.2075 6.10875C4.1175 5.88375 3.8025 4.96125 4.2975 3.72375C4.2975 3.72375 5.05125 3.4875 6.7725 4.64625C7.4925 4.44375 8.2575 4.3425 9.0225 4.3425C9.7875 4.3425 10.5525 4.44375 11.2725 4.64625C12.9937 3.47625 13.7475 3.72375 13.7475 3.72375C14.2425 4.96125 13.9275 5.88375 13.8375 6.10875C14.4113 6.73875 14.76 7.5375 14.76 8.5275C14.76 11.9812 12.6562 12.7462 10.6537 12.9712C10.98 13.2525 11.2613 13.7925 11.2613 14.6362C11.2613 15.84 11.25 16.8075 11.25 17.1112C11.25 17.3475 11.4187 17.6287 11.8687 17.5387C13.6554 16.9355 15.2079 15.7873 16.3077 14.2555C17.4076 12.7238 17.9995 10.8857 18 9C18 4.0275 13.9725 0 9 0Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                <p className="font-macan text-[16px] leading-[120%] tracking-[0.01em] font-semibold">
-                  Login with Github
-                </p>
-              </button>
-              <p
-                className={`font-macan text-[16px] leading-[120%] tracking-[0.02em] font-bold text-[var(--neutral-500)] duration-100 ${isSent && "pointer-events-none"}`}
-                style={{
-                  opacity: isSent ? "0" : "1",
-                }}
-              >
-                or
-              </p>
+            <div className="absolute inset-0 bg-[color-mix(in_srgb,_var(--neutral-850)_50%,var(--neutral-800))] rounded-[40px] overflow-hidden">
               <div
-                className={`relative w-full duration-200 ease-in-out ${isSent && "pointer-events-none"}`}
+                className="absolute inset-[-140px_auto_auto_50%] -translate-x-1/2 w-40 h-40 rounded-[50%] blur-[50px] opacity-30 duration-200"
                 style={{
-                  transform: `translateY(${isSent ? "-180px" : "0"})`,
-                  opacity: isLoaded ? "0" : "1",
+                  backgroundColor: `color-mix(in srgb, ${activeColor} 20%, var(--neutral-300))`,
                 }}
+              ></div>
+              <div className="absolute inset-px bg-[var(--neutral-850)] rounded-[39px]">
+                <div
+                  className="absolute inset-[-140px_auto_auto_50%] -translate-x-1/2 w-70 h-40 rounded-[50%] blur-[50px] opacity-10 duration-200"
+                  style={{ backgroundColor: activeColor }}
+                ></div>
+              </div>
+            </div>
+            <div className="absolute inset-0 px-12 pt-10 pb-12 flex flex-col items-stretch gap-10">
+              <h2
+                className={`${isSent ? (isLoaded ? "opacity-100" : "opacity-0 pointer-events-none") : "opacity-100"} font-macan text-2xl font-medium leading-[100%] tracking-[-0.02em] text-white text-center duration-100`}
               >
-                <input
-                  ref={emailInputRef}
-                  type="email"
-                  placeholder="Enter your email"
-                  className={`relative w-full h-13 pl-3.5 flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-850)] border-2 ${isSent ? "border-[var(--neutral-800)]" : "border-[var(--neutral-800)] hover:border-[var(--neutral-700)] focus:border-[var(--neutral-300)]"} outline-none font-macan text-[16px] leading-[120%] tracking-[0.01em] font-medium placeholder:text-[var(--neutral-400)] focus:placeholder:text-[var(--neutral-600)] duration-100`}
-                  style={{
-                    color: isSent ? "var(--neutral-700)" : "var(--neutral-100)",
-                  }}
-                  onChange={(event) =>
-                    setIsActive(event.currentTarget.checkValidity())
-                  }
-                />
+                {isLoaded ? "Check your email" : "Welcome, let’s get started."}
+              </h2>
+              <p
+                className={`absolute inset-[80px_16px_auto_16px] ${isLoaded ? "opacity-100" : "opacity-0 pointer-events-none"} font-macan text-sm leading-[120%] tracking-[0.01em] text-[var(--neutral-400)] text-center text-pretty duration-200`}
+              >
+                A magic link has been sent to{" "}
+                <span className="text-[var(--neutral-200)]">{email}</span>{" "}
+                <br />
+                Please check spam too!
+              </p>
+              <div className="w-full flex flex-col items-center gap-6">
                 <button
-                  className={`absolute inset-[5px_5px_5px_auto] aspect-square flex items-center justify-center rounded-[10px] duration-200 ${isSent ? "cursor-auto pointer-events-none" : isActive && "cursor-pointer hover:opacity-80"}`}
-                  style={{
-                    backgroundColor:
-                      isActive && !isSent
-                        ? "var(--neutral-100)"
-                        : "var(--neutral-800)",
-                  }}
-                  onClick={handleSend}
+                  className={`w-full h-12 ${isSent ? "opacity-0 pointer-events-none duration-100" : "opacity-100 hover:opacity-80! cursor-pointer duration-200"} flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-100)] text-[var(--neutral-900)]`}
                 >
                   <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M9 0C4.0275 0 0 4.0275 0 9C0 12.9825 2.57625 16.3462 6.15375 17.5387C6.60375 17.6175 6.7725 17.3475 6.7725 17.1112C6.7725 16.8975 6.76125 16.1887 6.76125 15.435C4.5 15.8512 3.915 14.8837 3.735 14.3775C3.63375 14.1187 3.195 13.32 2.8125 13.1062C2.4975 12.9375 2.0475 12.5212 2.80125 12.51C3.51 12.4987 4.01625 13.1625 4.185 13.4325C4.995 14.7937 6.28875 14.4112 6.80625 14.175C6.885 13.59 7.12125 13.1962 7.38 12.9712C5.3775 12.7462 3.285 11.97 3.285 8.5275C3.285 7.54875 3.63375 6.73875 4.2075 6.10875C4.1175 5.88375 3.8025 4.96125 4.2975 3.72375C4.2975 3.72375 5.05125 3.4875 6.7725 4.64625C7.4925 4.44375 8.2575 4.3425 9.0225 4.3425C9.7875 4.3425 10.5525 4.44375 11.2725 4.64625C12.9937 3.47625 13.7475 3.72375 13.7475 3.72375C14.2425 4.96125 13.9275 5.88375 13.8375 6.10875C14.4113 6.73875 14.76 7.5375 14.76 8.5275C14.76 11.9812 12.6562 12.7462 10.6537 12.9712C10.98 13.2525 11.2613 13.7925 11.2613 14.6362C11.2613 15.84 11.25 16.8075 11.25 17.1112C11.25 17.3475 11.4187 17.6287 11.8687 17.5387C13.6554 16.9355 15.2079 15.7873 16.3077 14.2555C17.4076 12.7238 17.9995 10.8857 18 9C18 4.0275 13.9725 0 9 0Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <p className="font-macan text-[16px] leading-[120%] tracking-[0.01em] font-semibold">
+                    Login with Github
+                  </p>
+                </button>
+                <p
+                  className={`font-macan text-[16px] leading-[120%] tracking-[0.02em] font-bold text-[var(--neutral-500)] duration-100 ${isSent && "pointer-events-none"}`}
+                  style={{
+                    opacity: isSent ? "0" : "1",
+                  }}
+                >
+                  or
+                </p>
+                <div
+                  className={`relative w-full ${isLoaded ? "opacity-0 duration-200" : "opacity-100 duration-400"} ease-[cubic-bezier(0.8,0,0.2,1)] ${isSent && "pointer-events-none"}`}
+                  style={{
+                    transform: `translateY(${isSent ? "-180px" : "0"})`,
+                  }}
+                >
+                  <input
+                    ref={emailInputRef}
+                    type="email"
+                    placeholder="Enter your email"
+                    className={`relative w-full h-13 pl-3.5 flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-850)] border-2 ${isSent ? "border-[var(--neutral-800)]" : "border-[var(--neutral-800)] hover:border-[var(--neutral-700)] focus:border-[var(--neutral-300)]"} outline-none font-macan text-[16px] leading-[120%] tracking-[0.01em] font-medium placeholder:text-[var(--neutral-400)] focus:placeholder:text-[var(--neutral-600)] duration-100`}
+                    style={{
+                      color: isSent
+                        ? "var(--neutral-700)"
+                        : "var(--neutral-100)",
+                    }}
+                    onChange={(event) =>
+                      setIsActive(event.currentTarget.checkValidity())
+                    }
+                  />
+                  <button
+                    className={`absolute inset-[5px_5px_5px_auto] aspect-square flex items-center justify-center rounded-[10px] duration-200 ${isSent ? "cursor-auto pointer-events-none" : isActive && "cursor-pointer hover:opacity-80"}`}
+                    style={{
+                      backgroundColor:
+                        isActive && !isSent
+                          ? "var(--neutral-100)"
+                          : "var(--neutral-800)",
+                    }}
+                    onClick={handleSend}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M14.5 7L19.5 12L14.5 17M19.5 12H4.5"
+                        stroke="var(--neutral-850)"
+                        strokeWidth="2.25"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <button
+                  className={`absolute left-1/2 -translate-x-1/2 bottom-9 ${isSent ? (isLoaded && !isResent ? "opacity-100 hover:opacity-80! cursor-pointer pointer-events-auto delay-0!" : "opacity-100 pointer-events-none") : "opacity-0"} flex items-center gap-2 text-[var(--neutral-100)] duration-200 delay-100`}
+                  style={{
+                    opacity: isSent ? "1" : "0",
+                  }}
+                  onClick={handleResend}
+                >
+                  <svg
+                    className="duration-200 origin-right"
+                    style={{
+                      transform: `scale(${isIndicatorLoaded ? 0.8 : 1})`,
+                    }}
                     width="24"
                     height="24"
                     viewBox="0 0 24 24"
@@ -193,94 +240,70 @@ export default function LoginPage() {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M14.5 7L19.5 12L14.5 17M19.5 12H4.5"
-                      stroke="var(--neutral-850)"
-                      strokeWidth="2.25"
+                      className="duration-400"
+                      opacity={isIndicatorLoaded ? "0" : "0.2"}
+                      d="M12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20Z"
+                      stroke="var(--neutral-100)"
+                      strokeWidth="2.5"
+                    />
+                    <path
+                      ref={spinnerPathRef}
+                      className="[transform-box:fill-box] origin-center"
+                      d="M12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4Z"
+                      stroke="var(--neutral-100)"
+                      strokeWidth="2.5"
+                      strokeDasharray={isIndicatorLoaded ? "38 12" : "5 45"}
+                      strokeDashoffset="-50"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      className={`duration-200 ease-out ${isIndicatorLoaded ? "delay-800" : ""}`}
+                      d="M14.5 8H19"
+                      stroke="var(--neutral-100)"
+                      strokeWidth="2.5"
+                      strokeDasharray="4.5"
+                      strokeDashoffset={isIndicatorLoaded ? "0" : "-4.5"}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      className={`duration-200 ease-out ${isIndicatorLoaded ? "delay-800" : ""}`}
+                      d="M19 3.5V8"
+                      stroke="var(--neutral-100)"
+                      strokeWidth="2.5"
+                      strokeDasharray="4.5"
+                      strokeDashoffset={isIndicatorLoaded ? "0" : "-4.5"}
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                   </svg>
+                  <p
+                    className="font-macan text-[16px] leading-[120%] tracking-[0.01em] font-semibold whitespace-nowrap duration-200 ease-in-out"
+                    style={{
+                      width: isIndicatorLoaded
+                        ? 90.71
+                        : isResent
+                          ? 126.45
+                          : 107.46,
+                    }}
+                  >
+                    {isIndicatorLoaded
+                      ? "Resend link"
+                      : isResent
+                        ? "Resending link..."
+                        : "Sending link..."}
+                  </p>
                 </button>
               </div>
-              <button
-                className={`absolute left-1/2 -translate-x-1/2 bottom-9 ${isSent ? (isLoaded && !isResent ? "opacity-100 hover:opacity-80! cursor-pointer pointer-events-auto delay-0!" : "opacity-100 pointer-events-none") : "opacity-0"} flex items-center gap-2 text-[var(--neutral-100)] duration-200 delay-100`}
-                style={{
-                  opacity: isSent ? "1" : "0",
-                }}
-                onClick={handleResend}
+              <div
+                className={`absolute left-1/2 -translate-x-1/2 -translate-y-2 -bottom-16 h-8 px-2.5 flex items-center justify-center bg-[var(--neutral-850)] rounded-lg duration-200 ${isToastVisible ? "opacity-100 translate-y-0!" : "opacity-0 pointer-events-none"}`}
+                aria-live="polite"
               >
-                <svg
-                  className="duration-200 origin-right"
-                  style={{ transform: `scale(${isIndicatorLoaded ? 0.8 : 1})` }}
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    opacity={isIndicatorLoaded ? "0" : "0.2"}
-                    d="M12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20Z"
-                    stroke="var(--neutral-100)"
-                    strokeWidth="2.5"
-                  />
-                  <path
-                    ref={spinnerPathRef}
-                    className="[transform-box:fill-box] origin-center"
-                    d="M12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4Z"
-                    stroke="var(--neutral-100)"
-                    strokeWidth="2.5"
-                    strokeDasharray={isIndicatorLoaded ? "38 12" : "5 45"}
-                    strokeDashoffset="-50"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    className={`duration-200 ease-out ${isIndicatorLoaded ? "delay-600" : ""}`}
-                    d="M14.5 8H19"
-                    stroke="var(--neutral-100)"
-                    strokeWidth="2.5"
-                    strokeDasharray="4.5"
-                    strokeDashoffset={isIndicatorLoaded ? "0" : "-4.5"}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    className={`duration-200 ease-out ${isIndicatorLoaded ? "delay-600" : ""}`}
-                    d="M19 3.5V8"
-                    stroke="var(--neutral-100)"
-                    strokeWidth="2.5"
-                    strokeDasharray="4.5"
-                    strokeDashoffset={isIndicatorLoaded ? "0" : "-4.5"}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <p
-                  className="font-macan text-[16px] leading-[120%] tracking-[0.01em] font-semibold whitespace-nowrap duration-200 ease-in-out"
-                  style={{
-                    width: isIndicatorLoaded
-                      ? 90.71
-                      : isResent
-                        ? 126.45
-                        : 107.46,
-                  }}
-                >
-                  {isIndicatorLoaded
-                    ? "Resend link"
-                    : isResent
-                      ? "Resending link..."
-                      : "Sending link..."}
+                <p className="font-macan text-sm leading-[120%] tracking-[0.01em] text-[var(--neutral-400)] text-center">
+                  Link sent!
                 </p>
-              </button>
-            </div>
-            <div
-              className={`absolute left-1/2 -translate-x-1/2 -translate-y-2 -bottom-16 h-8 px-2.5 flex items-center justify-center bg-[var(--neutral-850)] rounded-lg duration-200 ${isToastVisible ? "opacity-100 translate-y-0!" : "opacity-0 pointer-events-none"}`}
-              aria-live="polite"
-            >
-              <p className="font-macan text-sm leading-[120%] tracking-[0.01em] text-[var(--neutral-400)] text-center">
-                Link sent!
-              </p>
+              </div>
             </div>
           </div>
         </div>

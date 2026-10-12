@@ -269,17 +269,24 @@ function applyPose(element: HTMLDivElement, pose: Pose) {
 type LatencyLogoProps = {
   size?: number;
   isAnimating: boolean;
+  onActiveColorChange?: (color: string) => void;
 };
 
 export default function LatencyLogo({
   size = BASE_SIZE,
   isAnimating,
+  onActiveColorChange,
 }: LatencyLogoProps) {
   const boxOpacity = 0;
   const rootRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const isAnimatingRef = useRef(isAnimating);
+  const onActiveColorChangeRef = useRef(onActiveColorChange);
   const wakeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    onActiveColorChangeRef.current = onActiveColorChange;
+  }, [onActiveColorChange]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -306,6 +313,8 @@ export default function LatencyLogo({
 
     // Scoped to the logo so it doesn't leak to the rest of the page.
     wrapper.style.setProperty("--active", COLORS[0]);
+    let activeColor = COLORS[0];
+    onActiveColorChangeRef.current?.(activeColor);
 
     const tick = (now: number) => {
       const animating = isAnimatingRef.current;
@@ -344,10 +353,13 @@ export default function LatencyLogo({
         transitionFrom = lastPose;
       }
 
-      wrapper.style.setProperty(
-        "--active",
-        COLORS[((animating ? nextState : 1) - 1) % COLORS.length],
-      );
+      const nextColor =
+        COLORS[((animating ? nextState : 1) - 1) % COLORS.length];
+      if (nextColor !== activeColor) {
+        activeColor = nextColor;
+        wrapper.style.setProperty("--active", activeColor);
+        onActiveColorChangeRef.current?.(activeColor);
+      }
 
       const targetPose = animating
         ? getTargetPose(nextState, localMs, holdKnobRight)
