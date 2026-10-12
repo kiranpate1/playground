@@ -320,7 +320,8 @@ export default function LatencyLogo({
       const animating = isAnimatingRef.current;
 
       if (animating) {
-        virtualElapsedMs += now - lastNow;
+        // The rAF timestamp can precede the performance.now() taken in wake(), giving a negative delta.
+        virtualElapsedMs += Math.max(0, now - lastNow);
       }
 
       lastNow = now;

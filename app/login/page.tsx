@@ -184,7 +184,7 @@ export default function LoginPage() {
                     ref={emailInputRef}
                     type="email"
                     placeholder="Enter your email"
-                    className={`relative w-full h-13 pl-3.5 flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-850)] border-2 ${isSent ? "border-[var(--neutral-800)]" : "border-[var(--neutral-800)] hover:border-[var(--neutral-700)] focus:border-[var(--neutral-300)]"} outline-none font-macan text-[16px] leading-[120%] tracking-[0.01em] font-medium placeholder:text-[var(--neutral-400)] focus:placeholder:text-[var(--neutral-600)] duration-100`}
+                    className={`relative w-full h-13 pl-3.5 flex items-center justify-center gap-2 rounded-[14px] border-2 ${isSent ? "border-[var(--neutral-800)]" : "border-[var(--neutral-800)] hover:border-[var(--neutral-700)] focus:border-[var(--neutral-300)]"} outline-none font-macan text-[16px] leading-[120%] tracking-[0.01em] font-medium placeholder:text-[var(--neutral-400)] focus:placeholder:text-[var(--neutral-600)] duration-100`}
                     style={{
                       color: isSent
                         ? "var(--neutral-700)"
