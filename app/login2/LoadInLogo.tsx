@@ -9,10 +9,10 @@ const SHAPE_SIZE = 38;
 const KNOB_SIZE = 28;
 const BASE_SIZE = 80;
 const INITIAL_FREEZE_MS = 350;
-const STATE5_SEGMENT_DURATION_MS = 250;
+const KNOB_SEGMENT_DURATION_MS = 250;
 const DEFAULT_ACTIVE_COLOR = "var(--neutral-100)";
-const STATE5_COLORS = ["#35C6FF", "#B5F349", "#FFC61A", "#FF9748"];
-const STATES = [1, 2, 3, 4, 5];
+const STATE2_COLORS = ["#2BFAFF", "#B5F349", "#FFC61A", "#EB8652"];
+const STATES = [1, 2, 3];
 const STATE1_PHASE_1_DURATION_MS = 620;
 const STATE1_PHASE_2_DURATION_MS = 430;
 const STATE1_PHASE_1_ROTATE_DEG = -90;
@@ -24,8 +24,6 @@ type Pose = {
   parentRotate: number;
   shape1Width: number;
   shape1Height: number;
-  shape1X: number;
-  shape1Y: number;
   shape2Scale: number;
   shape3Scale: number;
   shape4Scale: number;
@@ -34,7 +32,6 @@ type Pose = {
   knob1X: number;
   knob1Y: number;
   knob1Rotate: number;
-  knob4Opacity: number;
   testOpacity: number;
 };
 
@@ -42,8 +39,6 @@ const INITIAL_POSE: Pose = {
   parentRotate: 0,
   shape1Width: SHAPE_SIZE,
   shape1Height: SHAPE_SIZE,
-  shape1X: 0,
-  shape1Y: 0,
   shape2Scale: 1,
   shape3Scale: 1,
   shape4Scale: 1,
@@ -52,7 +47,6 @@ const INITIAL_POSE: Pose = {
   knob1X: 0,
   knob1Y: 0,
   knob1Rotate: 0,
-  knob4Opacity: 1,
   testOpacity: 0,
 };
 
@@ -60,8 +54,6 @@ const POSE_VARIABLES: [keyof Pose, `--${string}`][] = [
   ["parentRotate", "--parent-rotate"],
   ["shape1Width", "--shape-1-width"],
   ["shape1Height", "--shape-1-height"],
-  ["shape1X", "--shape-1-x"],
-  ["shape1Y", "--shape-1-y"],
   ["shape2Scale", "--shape-2-scale"],
   ["shape3Scale", "--shape-4-scale"],
   ["shape4Scale", "--shape-3-scale"],
@@ -70,7 +62,6 @@ const POSE_VARIABLES: [keyof Pose, `--${string}`][] = [
   ["knob1X", "--knob-1-x"],
   ["knob1Y", "--knob-1-y"],
   ["knob1Rotate", "--knob-1-rotate"],
-  ["knob4Opacity", "--knob-3-opacity"],
   ["testOpacity", "--test-opacity"],
 ];
 
@@ -84,14 +75,6 @@ function mix(from: number, to: number, progress: number) {
 
 function alignEquivalentAngle(target: number, reference: number) {
   return target + Math.round((reference - target) / 360) * 360;
-}
-
-function easeIn(progress: number) {
-  return progress * progress;
-}
-
-function easeOut(progress: number) {
-  return 1 - (1 - progress) * (1 - progress);
 }
 
 function easeInOut(progress: number) {
@@ -136,63 +119,25 @@ function cubicBezier(
   return sample(mid, p1y, p2y);
 }
 
-function getAlternatingProgress(elapsedMs: number, durationMs: number) {
-  const iteration = Math.floor(elapsedMs / durationMs);
-  const progress = (elapsedMs % durationMs) / durationMs;
+function getKnobSegmentIndex(localMs: number) {
+  const loopMs = localMs % (KNOB_SEGMENT_DURATION_MS * 4);
 
-  return iteration % 2 === 0 ? progress : 1 - progress;
+  return Math.floor(loopMs / KNOB_SEGMENT_DURATION_MS);
 }
 
-function getKnob1State1(localMs: number) {
-  const progress = getAlternatingProgress(localMs, 550);
+function getState2ColorIndex(localMs: number) {
+  const segmentDurationMs = STATE_DURATION_MS / STATE2_COLORS.length;
 
-  if (progress <= 0.5) {
-    const segmentProgress = easeIn(progress / 0.5);
-
-    return {
-      width: mix(28, 36, segmentProgress),
-      x: mix(0, 32, segmentProgress),
-    };
-  }
-
-  const segmentProgress = easeOut((progress - 0.5) / 0.5);
-
-  return {
-    width: mix(36, 28, segmentProgress),
-    x: mix(32, 42, segmentProgress),
-  };
+  return Math.min(
+    Math.floor(localMs / segmentDurationMs),
+    STATE2_COLORS.length - 1,
+  );
 }
 
 function getKnob1State2(localMs: number) {
-  const progress = getAlternatingProgress(localMs, 550);
-
-  if (progress <= 0.5) {
-    const segmentProgress = easeIn(progress / 0.5);
-
-    return {
-      height: mix(28, 56, segmentProgress),
-      y: mix(0, 11, segmentProgress),
-    };
-  }
-
-  const segmentProgress = easeOut((progress - 0.5) / 0.5);
-
-  return {
-    height: mix(56, 28, segmentProgress),
-    y: mix(11, 42, segmentProgress),
-  };
-}
-
-function getState5SegmentIndex(localMs: number) {
-  const loopMs = localMs % (STATE5_SEGMENT_DURATION_MS * 4);
-
-  return Math.floor(loopMs / STATE5_SEGMENT_DURATION_MS);
-}
-
-function getKnob1State5(localMs: number) {
-  const segmentIndex = getState5SegmentIndex(localMs);
+  const segmentIndex = getKnobSegmentIndex(localMs);
   const segmentProgress =
-    (localMs % STATE5_SEGMENT_DURATION_MS) / STATE5_SEGMENT_DURATION_MS;
+    (localMs % KNOB_SEGMENT_DURATION_MS) / KNOB_SEGMENT_DURATION_MS;
 
   switch (segmentIndex) {
     case 0:
@@ -250,7 +195,7 @@ function getTargetPose(state: number, localMs: number): Pose {
       };
     }
     case 2: {
-      const knob = getKnob1State5(localMs);
+      const knob = getKnob1State2(localMs);
 
       return {
         ...INITIAL_POSE,
@@ -260,34 +205,7 @@ function getTargetPose(state: number, localMs: number): Pose {
         testOpacity: 1,
       };
     }
-    case 3: {
-      const knob = getKnob1State1(localMs);
-
-      return {
-        ...INITIAL_POSE,
-        shape1Width: 80,
-        shape2Scale: 0,
-        shape3Scale: 0,
-        knob1Width: knob.width,
-        knob1X: knob.x,
-        knob4Opacity: 0,
-      };
-    }
-    case 4: {
-      const knob = getKnob1State2(localMs);
-
-      return {
-        ...INITIAL_POSE,
-        shape1Height: 80,
-        shape1X: 21,
-        shape2Scale: 0,
-        shape3Scale: 0,
-        shape4Scale: 0,
-        knob1Height: knob.height,
-        knob1Y: knob.y,
-      };
-    }
-    case 5:
+    case 3:
       return {
         ...INITIAL_POSE,
         parentRotate: 90,
@@ -305,8 +223,6 @@ function interpolatePose(from: Pose, to: Pose, progress: number): Pose {
     parentRotate: mix(from.parentRotate, to.parentRotate, progress),
     shape1Width: mix(from.shape1Width, to.shape1Width, progress),
     shape1Height: mix(from.shape1Height, to.shape1Height, progress),
-    shape1X: mix(from.shape1X, to.shape1X, progress),
-    shape1Y: mix(from.shape1Y, to.shape1Y, progress),
     shape2Scale: mix(from.shape2Scale, to.shape2Scale, progress),
     shape3Scale: mix(from.shape3Scale, to.shape3Scale, progress),
     shape4Scale: mix(from.shape4Scale, to.shape4Scale, progress),
@@ -315,7 +231,6 @@ function interpolatePose(from: Pose, to: Pose, progress: number): Pose {
     knob1X: mix(from.knob1X, to.knob1X, progress),
     knob1Y: mix(from.knob1Y, to.knob1Y, progress),
     knob1Rotate: mix(from.knob1Rotate, to.knob1Rotate, progress),
-    knob4Opacity: mix(from.knob4Opacity, to.knob4Opacity, progress),
     testOpacity: mix(from.testOpacity, to.testOpacity, progress),
   };
 }
@@ -336,10 +251,8 @@ export default function LoadInLogo({
   onActiveColorChange,
 }: LoadInLogoProps) {
   const boxOpacity = 0;
-  const isLooped = false;
   const rootRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const wordmarkRef = useRef<SVGSVGElement>(null);
   const onActiveColorChangeRef = useRef(onActiveColorChange);
 
   useEffect(() => {
@@ -349,10 +262,6 @@ export default function LoadInLogo({
   useLayoutEffect(() => {
     const root = rootRef.current;
     const wrapper = wrapperRef.current;
-    const wordmarkPaths = wordmarkRef.current
-      ? Array.from(wordmarkRef.current.querySelectorAll("path"))
-      : [];
-
     if (!root || !wrapper) {
       return;
     }
@@ -376,8 +285,13 @@ export default function LoadInLogo({
       const nextState = STATES[Math.min(stateIndex, STATES.length - 1)];
       const localMs = timelineMs - stateIndex * STATE_DURATION_MS;
 
-      const nextColor =
-        nextState === 1 ? DEFAULT_ACTIVE_COLOR : STATE5_COLORS[nextState - 2];
+      let nextColor = activeColor;
+
+      if (nextState === 1) {
+        nextColor = DEFAULT_ACTIVE_COLOR;
+      } else if (nextState === 2) {
+        nextColor = STATE2_COLORS[getState2ColorIndex(localMs)];
+      }
 
       if (nextColor !== activeColor) {
         activeColor = nextColor;
@@ -385,44 +299,10 @@ export default function LoadInLogo({
         onActiveColorChangeRef.current?.(activeColor);
       }
 
-      if (wordmarkRef.current) {
-        const stateProgress = localMs / STATE_DURATION_MS;
-        let skewX = 0;
-        let strokeWidth = 2.45;
-
-        if (nextState === 3) {
-          if (stateProgress <= 0.1) {
-            skewX = 0;
-          } else if (stateProgress <= 0.4) {
-            skewX = mix(0, -20, easeInOut((stateProgress - 0.1) / 0.3));
-          } else if (stateProgress <= 0.7) {
-            skewX = -20;
-          } else {
-            skewX = mix(-20, 0, easeInOut((stateProgress - 0.7) / 0.3));
-          }
-        }
-
-        if (nextState === 4) {
-          if (stateProgress <= 0.3) {
-            strokeWidth = mix(2.45, 0, easeInOut(stateProgress / 0.3));
-          } else if (stateProgress <= 0.5) {
-            strokeWidth = 0;
-          } else if (stateProgress <= 0.8) {
-            strokeWidth = mix(0, 2.45, easeInOut((stateProgress - 0.5) / 0.3));
-          }
-        }
-
-        wordmarkRef.current.style.transform = `skewX(${skewX}deg)`;
-        const strokeWidthPx = `${strokeWidth.toFixed(2)}px`;
-        for (const path of wordmarkPaths) {
-          path.style.strokeWidth = strokeWidthPx;
-        }
-      }
-
       {
         const stateProgress = localMs / STATE_DURATION_MS;
         const stageWidth =
-          !isLooped && nextState === 1
+          nextState === 1
             ? mix(
                 CASE1_START_WIDTH_PX,
                 CASE1_END_WIDTH_PX,
@@ -490,7 +370,7 @@ export default function LoadInLogo({
       className="relative flex items-center justify-center"
       style={{
         gap: `${1.25 * (size / BASE_SIZE)}rem`,
-        width: isLooped ? CASE1_END_WIDTH_PX : CASE1_START_WIDTH_PX,
+        width: CASE1_START_WIDTH_PX,
         height: size,
       }}
     >
@@ -611,7 +491,6 @@ export default function LoadInLogo({
         viewBox="-1 -1 233 74"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        ref={wordmarkRef}
       >
         <path
           fillRule="evenodd"

@@ -11,12 +11,15 @@ import {
 import LoadInLogo from "./LoadInLogo";
 import HoverGlow from "./HoverGlow";
 
+const INITIAL_FADE_DELAY_MS = 300;
+
 export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isResent, setIsResent] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
+  const [toastText, setToastText] = useState("");
   const emailInputRef = useRef<HTMLInputElement>(null);
   const spinnerPathRef = useRef<SVGPathElement>(null);
   const spinnerAngleRef = useRef(0);
@@ -54,21 +57,36 @@ export default function LoginPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      setIsLoaded(true);
-      setIsResent(false);
+      if (email === "error@mail.com") {
+        const input = emailInputRef.current;
+        if (input) {
+          input.style.borderColor = "#e04826";
+          setTimeout(() => {
+            input.style.borderColor = "";
+          }, 2010);
+        }
+        setToastText("Error, please try again.");
+        setIsSent(false);
+      } else {
+        setIsLoaded(true);
+        setIsResent(false);
+        setToastText("Email sent!");
+      }
       setIsToastVisible(true);
     }, 2000);
     return () => window.clearTimeout(timeoutId);
   }, [isLoaded, isResent, isSent]);
 
   useEffect(() => {
-    if (!isToastVisible) {
+    if (!toastText || !isToastVisible) {
       return;
     }
 
     const timeoutId = window.setTimeout(() => setIsToastVisible(false), 2000);
     return () => window.clearTimeout(timeoutId);
-  }, [isToastVisible]);
+  }, [toastText, isToastVisible]);
+
+  const logoReflectionRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -79,13 +97,29 @@ export default function LoginPage() {
     const animations = blurElmsRef.current.map((element, index) =>
       element.animate([{ opacity: 0 }, {}], {
         duration: 600,
-        delay: index * 80,
+        delay: INITIAL_FADE_DELAY_MS + index * 80,
         easing: "cubic-bezier(0.8, 0, 0.2, 1)",
         fill: "backwards",
       }),
     );
 
-    return () => animations.forEach((animation) => animation.cancel());
+    const logoReflectionExpand = logoReflectionRef.current?.animate(
+      [{ width: "5%" }, { width: "70%" }],
+      {
+        duration: 1000,
+        easing: "cubic-bezier(0, 0.5, 1, 0.5)",
+        fill: "forwards",
+      },
+    );
+
+    const timeoutId = window.setTimeout(() => {
+      (animations.forEach((animation) => animation.cancel()),
+        logoReflectionExpand);
+    }, 2000);
+    return () => {
+      window.clearTimeout(timeoutId);
+      animations.forEach((animation) => animation.cancel());
+    };
   }, []);
 
   useLayoutEffect(() => {
@@ -104,12 +138,20 @@ export default function LoginPage() {
         ],
         { duration: 1000, iterations: Infinity, easing: "linear" },
       );
+      const dashAnimation =
+        isLoaded && isResent
+          ? spinnerPath.animate(
+              [{ strokeDasharray: "38 12" }, { strokeDasharray: "5 45" }],
+              { duration: 800, easing: "cubic-bezier(.36,.53,.73,1)" },
+            )
+          : undefined;
 
       return () => {
         const elapsedMs = Number(animation.currentTime ?? 0);
         spinnerAngleRef.current =
           startAngle + ((elapsedMs % 1000) / 1000) * 360;
         animation.cancel();
+        dashAnimation?.cancel();
       };
     }
 
@@ -134,7 +176,14 @@ export default function LoginPage() {
       },
     );
 
-    return () => animation.cancel();
+    return () => {
+      const transform = new DOMMatrixReadOnly(
+        window.getComputedStyle(spinnerPath).transform,
+      );
+      spinnerAngleRef.current =
+        (Math.atan2(transform.b, transform.a) * 180) / Math.PI;
+      animation.cancel();
+    };
   }, [isLoaded, isResent, isSent]);
 
   return (
@@ -157,6 +206,7 @@ export default function LoginPage() {
                 <div
                   className="absolute inset-[-140px_auto_auto_50%] -translate-x-1/2 w-70 h-40 group-hover:h-50 rounded-[50%] blur-[50px] opacity-10 group-hover:opacity-15 duration-200"
                   style={{ backgroundColor: activeColor }}
+                  ref={logoReflectionRef}
                 ></div>
               </div>
             </div>
@@ -178,7 +228,7 @@ export default function LoginPage() {
               </p>
               <div className="w-full flex flex-col items-center gap-6">
                 <button
-                  className={`w-full h-12 ${isSent ? "opacity-0 pointer-events-none duration-100" : "opacity-100 hover:bg-[var(--neutral-50)]! cursor-pointer duration-200"} flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-150)] text-[var(--neutral-900)]`}
+                  className={`w-full h-12 ${isSent ? "opacity-0 pointer-events-none duration-100" : "opacity-100 hover:bg-[var(--neutral-50)]! cursor-pointer duration-200 delay-150"} flex items-center justify-center gap-2 rounded-[14px] bg-[var(--neutral-150)] text-[var(--neutral-900)]`}
                   ref={addBlurElm}
                 >
                   <svg
@@ -222,6 +272,8 @@ export default function LoginPage() {
                   <input
                     ref={emailInputRef}
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     placeholder="Enter your email"
                     className={`relative w-full h-13 pl-3.5 flex items-center justify-center gap-2 rounded-[14px] border-2 ${isSent ? "border-[color-mix(in_oklab,var(--neutral-700)_50%,transparent)]" : "border-[var(--neutral-800)] hover:border-[var(--neutral-700)] focus:border-[var(--neutral-300)]"} outline-none font-macan text-[16px] leading-[120%] tracking-[0.01em] font-medium placeholder:text-[var(--neutral-400)] focus:placeholder:text-[var(--neutral-600)] duration-100`}
                     style={{
@@ -297,7 +349,7 @@ export default function LoginPage() {
                       strokeLinejoin="round"
                     />
                     <path
-                      className={`duration-200 ease-out ${isIndicatorLoaded ? "delay-800" : ""}`}
+                      className={`transition-[stroke-dashoffset] duration-200 ease-out ${isIndicatorLoaded ? "delay-800" : ""}`}
                       d="M14.5 8H19"
                       stroke="var(--neutral-100)"
                       strokeWidth="2.5"
@@ -307,7 +359,7 @@ export default function LoginPage() {
                       strokeLinejoin="round"
                     />
                     <path
-                      className={`duration-200 ease-out ${isIndicatorLoaded ? "delay-800" : ""}`}
+                      className={`transition-[stroke-dashoffset] duration-200 ease-out ${isIndicatorLoaded ? "delay-800" : ""}`}
                       d="M19 3.5V8"
                       stroke="var(--neutral-100)"
                       strokeWidth="2.5"
@@ -340,7 +392,7 @@ export default function LoginPage() {
                 aria-live="polite"
               >
                 <p className="font-macan text-sm leading-[120%] tracking-[0.01em] text-[var(--neutral-400)] text-center">
-                  Link sent!
+                  {toastText}
                 </p>
               </div>
             </div>
@@ -371,7 +423,7 @@ export default function LoginPage() {
             ></div>
           </div>
           <div
-            className="relative flex items-center gap-2 text-[var(--neutral-400)] hover:text-[var(--neutral-50)] duration-200 cursor-pointer"
+            className="relative flex items-center gap-1.5 text-[var(--neutral-400)] hover:text-[var(--neutral-50)] duration-200 cursor-pointer"
             onMouseOver={() => {
               setWhichHovered("twitter");
               setLastHovered("twitter");
@@ -397,7 +449,7 @@ export default function LoginPage() {
             <div className="absolute -inset-0.25 bg-[var(--neutral-800)] rounded-[1px]"></div>
           </div>
           <div
-            className="relative flex items-center gap-2 text-[var(--neutral-400)] hover:text-[var(--neutral-50)] duration-200 cursor-pointer"
+            className="relative flex items-center gap-1.5 text-[var(--neutral-400)] hover:text-[var(--neutral-50)] duration-200 cursor-pointer"
             onMouseOver={() => {
               setWhichHovered("slack");
               setLastHovered("slack");
