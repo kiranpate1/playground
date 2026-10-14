@@ -131,13 +131,41 @@ export default function LoginPage() {
     const startAngle = spinnerAngleRef.current;
 
     if (!isLoaded || isResent) {
-      const animation = spinnerPath.animate(
-        [
-          { transform: `rotate(${startAngle}deg)` },
-          { transform: `rotate(${startAngle + 360}deg)` },
-        ],
-        { duration: 1000, iterations: Infinity, easing: "linear" },
-      );
+      let shouldContinueRotation = true;
+      let rotationAnimation: Animation;
+
+      const startLinearRotation = (angle: number) => {
+        if (!shouldContinueRotation) {
+          return;
+        }
+
+        rotationAnimation = spinnerPath.animate(
+          [
+            { transform: `rotate(${angle}deg)` },
+            { transform: `rotate(${angle + 360}deg)` },
+          ],
+          { duration: 1000, iterations: Infinity, easing: "linear" },
+        );
+      };
+
+      if (isLoaded && isResent) {
+        rotationAnimation = spinnerPath.animate(
+          [
+            { transform: `rotate(${startAngle}deg)` },
+            { transform: `rotate(${startAngle + 720}deg)` },
+          ],
+          {
+            duration: 700,
+            easing: "cubic-bezier(0.4, 0, 0.6, 0.86)",
+            fill: "forwards",
+          },
+        );
+        rotationAnimation.onfinish = () =>
+          startLinearRotation(startAngle + 720);
+      } else {
+        startLinearRotation(startAngle);
+      }
+
       const dashAnimation =
         isLoaded && isResent
           ? spinnerPath.animate(
@@ -147,10 +175,13 @@ export default function LoginPage() {
           : undefined;
 
       return () => {
-        const elapsedMs = Number(animation.currentTime ?? 0);
+        shouldContinueRotation = false;
+        const transform = new DOMMatrixReadOnly(
+          window.getComputedStyle(spinnerPath).transform,
+        );
         spinnerAngleRef.current =
-          startAngle + ((elapsedMs % 1000) / 1000) * 360;
-        animation.cancel();
+          (Math.atan2(transform.b, transform.a) * 180) / Math.PI;
+        rotationAnimation.cancel();
         dashAnimation?.cancel();
       };
     }
